@@ -1,0 +1,25 @@
+name: NEXO bridge CI (no credentials)
+on:
+  push:
+    paths:
+      - nexo_bridge.py
+      - tests/**
+      - .github/workflows/nexo-bridge-ci.yml
+  pull_request:
+    paths:
+      - nexo_bridge.py
+      - tests/**
+      - .github/workflows/nexo-bridge-ci.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - name: Validate bridge without tokens
+        run: |
+          python3 -m unittest discover -s tests -v
+          python3 nexo_bridge.py --self-test
