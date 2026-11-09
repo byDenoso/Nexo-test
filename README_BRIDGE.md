@@ -19,6 +19,19 @@ python3 -m unittest discover -s tests -v
 python3 nexo_bridge.py --self-test
 ```
 
+## Autorização OAuth local (sem enviar credenciais ao NEXO)
+
+No Google Cloud, habilite **Google Drive API** e **Google Sheets API**, configure a tela de consentimento e crie um **OAuth client do tipo Desktop app**. Inclua o usuário dono dos arquivos na autorização. A configuração externa em *Testing* pode expirar o refresh token após sete dias; configurar o ciclo de vida da aplicação antes de contar com agendamento permanente.
+
+No computador que fará o consentimento **uma vez**, execute:
+
+```bash
+python -m pip install google-auth-oauthlib
+python oauth_bootstrap.py --client-json caminho/para/client_secret.json
+```
+
+A autorização abre o navegador; o token é salvo **somente** no arquivo local `~/.nexo/oauth.json`, fora do repositório. Copie os três valores diretamente para **Settings > Secrets and variables > Actions** no repositório privado, sem colar no chat. Acrescente `NEXO_TOWER_ID` e `NEXO_ACHADOS_FOLDER_ID` como segredos. O escopo `spreadsheets` pode ler e editar as planilhas às quais o usuário tem acesso; `drive.file` restringe o Drive aos arquivos criados/explicitamente autorizados à aplicação. A especificação técnica de smoke criada antes desse consentimento também precisa estar autorizada, caso contrário a execução retorna `AUTH_REQUIRED`.
+
 ## Ativação privada (ação humana necessária)
 
 1. Criar cliente OAuth de aplicação Google Cloud com Drive API e Sheets API habilitadas; completar o consentimento com o usuário dono dos arquivos. `drive.file` exige que os arquivos já existentes necessários sejam explicitamente autorizados à aplicação; a configuração externa em *Testing* pode gerar refresh token expirando em sete dias.
