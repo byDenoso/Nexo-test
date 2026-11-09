@@ -1,0 +1,10 @@
+name: smoke
+on:
+  workflow_dispatch:
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - run: python3 -c "import numpy" 2>/dev/null || pip install numpy -q
+      - run: python3 -c "import sys,numpy;print(sys.version.split()[0],numpy.__version__)"
