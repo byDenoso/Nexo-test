@@ -1,0 +1,37 @@
+name: camb-hybrid
+on:
+  push:
+    branches: [camb-hybrid]
+    paths: ['camb_hybrid/**', '.github/workflows/camb-hybrid.yml']
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: msys2/setup-msys2@v2
+        with:
+          msystem: MINGW64
+          install: mingw-w64-x86_64-gcc-fortran
+          path-type: inherit
+      - name: build
+        shell: msys2 {0}
+        run: |
+          git clone -q --depth 1 --branch 1.6.6 --recurse-submodules https://github.com/cmbant/CAMB.git camb_src
+          python camb_hybrid/patch_hybrid.py camb_src
+          cd camb_src
+          python -m pip install -q build setuptools wheel numpy scipy sympy packaging
+          python setup.py -q make || true
+          python -m pip wheel . --no-deps --no-build-isolation -w ../dist
+      - name: smoke
+        shell: pwsh
+        run: |
+          python -m pip install --no-deps (Get-ChildItem dist/*.whl).FullName
+          python -m pip install -q numpy scipy sympy packaging
+          python camb_hybrid/smoke.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: camb-hybrid-win-py312
+          path: dist/*.whl
