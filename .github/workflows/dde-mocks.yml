@@ -1,0 +1,56 @@
+name: dde-mocks
+on:
+  push:
+    branches: [dde-mocks-1911]
+    paths: ['dde/**', '.github/workflows/dde-mocks.yml']
+jobs:
+  mocks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 340
+    strategy:
+      fail-fast: false
+      max-parallel: 20
+      matrix:
+        cell: [pantheon_lcdm, dovekie_lcdm, union3_lcdm, pantheon_cpl, dovekie_cpl, union3_cpl]
+        shard: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19]
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: |
+          sudo apt-get -qq install -y gfortran >/dev/null
+          pip install -q numpy==2.3.5 scipy==1.17.0 camb==1.6.6
+      - name: mocks
+        env:
+          OMP_NUM_THREADS: '1'
+          OPENBLAS_NUM_THREADS: '1'
+        run: |
+          S=${{ matrix.cell }}; sample=${S%_*}; truth=${S#*_}
+          base=$((2026120000 + ${{ strategy.job-index }} * 10))
+          for p in 0 1 2 3; do
+            python dde/shard.py --sample $sample --truth $truth --n 13 --seed $((base + p)) --tag ${S}_s${{ matrix.shard }}_p$p > log_$p.txt 2>&1 &
+          done
+          wait
+          tail -n 3 log_*.txt
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: mocks_${{ matrix.cell }}_${{ matrix.shard }}
+          path: dde/shards/**/mock_*.jsonl
+  agrega:
+    needs: mocks
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/download-artifact@v4
+        with:
+          path: todos
+      - run: python dde/agrega.py todos
+      - uses: actions/upload-artifact@v4
+        with:
+          name: agregado
+          path: |
+            agregado.json
+            todos/**/mock_*.jsonl

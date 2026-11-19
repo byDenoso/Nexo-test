@@ -1,0 +1,6 @@
+# Par Lyman-alpha DESI DR2 2026 com anisotropia de banda larga (DESI_DR2_Lya_FS_2026; Herbold et al. 2026)
+# z_eff = 2.33. Ordem: D_H/r_d, D_M/r_d. Substitui o par Lya do arquivo GCcomb (2025) quando pedido.
+z 2.33
+DH_over_rd 8.600 sigma 0.066
+DM_over_rd 39.32 sigma 0.33
+correlacao 0.225
