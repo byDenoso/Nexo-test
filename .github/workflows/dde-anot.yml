@@ -1,0 +1,29 @@
+name: dde-anot
+on:
+  push:
+    branches: [dde-anot-1911]
+permissions:
+  actions: read
+  contents: read
+jobs:
+  anot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: agregado
+          path: ag
+          run-id: 44513270468
+          github-token: ${{ github.token }}
+      - name: Publica o agregado como anotacoes publicas
+        run: |
+          python3 - <<'PY'
+          import json, hashlib
+          b = open('ag/agregado.json','rb').read()
+          d = json.loads(b)
+          print('::notice title=veredito::%s | sha256 agregado.json %s' % (d.get('veredito'), hashlib.sha256(b).hexdigest()))
+          for s, v in d.items():
+              if s == 'veredito': continue
+              print('::notice title=%s::%s' % (s, json.dumps(v, separators=(',', ':'))))
+          PY
